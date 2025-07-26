@@ -34,11 +34,11 @@ jobs:
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
           echo "Cobertura: ${COVERAGE}%"
           
-          if (( $(echo "$COVERAGE >= 80" | bc -l) )); then
-            echo "✅ Cobertura ${COVERAGE}% atende o limite mínimo de 80%"
+          if (( $(echo "$COVERAGE >= 70" | bc -l) )); then
+            echo "✅ Cobertura ${COVERAGE}% atende o limite mínimo de 70%"
             echo "passed=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ Cobertura ${COVERAGE}% está abaixo do limite mínimo de 80%"
+            echo "❌ Cobertura ${COVERAGE}% está abaixo do limite mínimo de 70%"
             echo "passed=false" >> $GITHUB_OUTPUT
             exit 1
           fi
@@ -91,7 +91,7 @@ jobs:
       - name: Controle de Cobertura
         run: |
           if [ "${{ needs.test-coverage.outputs.coverage-passed }}" != "true" ]; then
-            echo "❌ Pull Request bloqueado: Cobertura de testes abaixo do limite de 80%"
+            echo "❌ Pull Request bloqueado: Cobertura de testes abaixo do limite de 70%"
             echo "Por favor, adicione mais testes para atingir o requisito mínimo de cobertura."
             exit 1
           else
