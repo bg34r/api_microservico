@@ -1,50 +1,99 @@
 name: Go
 
 on:
-    
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
   
 jobs:
-  test:
+  test-coverage:
     runs-on: ubuntu-latest
-
+    outputs:
+      coverage-passed: ${{ steps.coverage-check.outputs.passed }}
+    
     steps:
-      - name: Checkout code
+      - name: Fazer checkout do código
         uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Configurar Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
 
-      - name: Install dependencies
+      - name: Instalar dependências
         run: go mod download
 
-      - name: Run handler tests
-        run: go test ./internal/interfaces/http/handlers/...
+      - name: Executar testes com cobertura
+        run: |
+          go test -v -coverprofile=coverage.out ./usecases/... ./internal/interfaces/http/handlers/...
+          go tool cover -func=coverage.out > coverage.txt
 
-      - name: Run usecase tests
-        run: go test ./usecases/...
-  
-  build:
-      needs: test
-      runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v3
-      - name: Build
-        run: go build -v main.go
-  
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4.6.2
+      - name: Verificar limite de cobertura
+        id: coverage-check
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Cobertura: ${COVERAGE}%"
+          
+          if (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+            echo "✅ Cobertura ${COVERAGE}% atende o limite mínimo de 80%"
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Cobertura ${COVERAGE}% está abaixo do limite mínimo de 80%"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Upload dos relatórios de cobertura
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-      # Artifact name
-          name: programa
-      # A file, directory or wildcard pattern that describes what to upload
-          path: main 
+          name: relatorio-cobertura
+          path: |
+            coverage.out
+            coverage.txt
+
+  build:
+    needs: test-coverage
+    if: needs.test-coverage.outputs.coverage-passed == 'true'
+    runs-on: ubuntu-latest
     
+    steps:
+      - name: Fazer checkout do código
+        uses: actions/checkout@v4
+        
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          
+      - name: Compilar aplicação
+        run: go build -v -o main main.go
+  
+      - name: Upload do artefato de build
+        uses: actions/upload-artifact@v4
+        with:
+          name: programa
+          path: main 
+
   docker:
-    needs: build
+    needs: [test-coverage, build]
+    if: needs.test-coverage.outputs.coverage-passed == 'true'
     uses: ./.github/workflows/Docker.yml
     secrets: inherit
+
+  # Job para proteger a branch main
+  coverage-gate:
+    needs: test-coverage
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Controle de Cobertura
+        run: |
+          if [ "${{ needs.test-coverage.outputs.coverage-passed }}" != "true" ]; then
+            echo "❌ Pull Request bloqueado: Cobertura de testes abaixo do limite de 80%"
+            echo "Por favor, adicione mais testes para atingir o requisito mínimo de cobertura."
+            exit 1
+          else
+            echo "✅ Requisitos de cobertura atendidos - PR pode ser mergeado"
+          fi
