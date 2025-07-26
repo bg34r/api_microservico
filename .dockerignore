@@ -1,0 +1,8 @@
+.env
+*.env
+.git
+.gitignore
+README.md
+README-IANA.md
+db/
+docker-compose.yml

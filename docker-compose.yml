@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_microservico
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: lanchonete
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: microservico_produtos_pedidos
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql_microservico
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: password
+      DB_NAME: lanchonete
+      SERVER_ADDRESS: :8080
+      PORT: 8080
+      APP_ENV: production
+      CONTEXT_TIMEOUT: 2
+      ACCESS_TOKEN_EXPIRY_HOUR: 2
+      REFRESH_TOKEN_EXPIRY_HOUR: 168
+      ACCESS_TOKEN_SECRET: access_token_secret
+      REFRESH_TOKEN_SECRET: refresh_token_secret
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+
+volumes:
+  mysql_data:

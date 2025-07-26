@@ -1,0 +1,379 @@
+basePath: /
+definitions:
+  entities.CatProduto:
+    enum:
+    - Lanche
+    - Acompanhamento
+    - Bebida
+    - Sobremesa
+    type: string
+    x-enum-varnames:
+    - Lanche
+    - Acompanhamento
+    - Bebida
+    - Sobremesa
+  entities.Pedido:
+    properties:
+      cliente_nome:
+        description: 'Opcional: apenas nome do cliente'
+        type: string
+      id:
+        type: integer
+      personalizacao:
+        description: Personalização específica do pedido
+        type: string
+      produtos:
+        items:
+          $ref: '#/definitions/entities.Produto'
+        type: array
+      status:
+        $ref: '#/definitions/entities.StatusPedido'
+      status_pagamento:
+        type: string
+      time_stamp:
+        type: string
+      total:
+        type: number
+      ultima_atualizacao:
+        type: string
+    type: object
+  entities.Produto:
+    properties:
+      categoriaProduto:
+        $ref: '#/definitions/entities.CatProduto'
+      descricaoProduto:
+        type: string
+      idProduto:
+        type: integer
+      nomeProduto:
+        type: string
+      precoProduto:
+        type: number
+    type: object
+  entities.StatusPedido:
+    enum:
+    - Pendente
+    - Recebido
+    - Em preparação
+    - Pronto
+    - Finalizado
+    type: string
+    x-enum-varnames:
+    - Pendente
+    - Recebido
+    - EmPreparacao
+    - Pronto
+    - Finalizado
+  presenters.ProdutoDTO:
+    properties:
+      categoria:
+        $ref: '#/definitions/entities.CatProduto'
+      descricao:
+        type: string
+      identificacao:
+        type: integer
+      nome:
+        type: string
+      preco:
+        type: number
+    type: object
+  response.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  response.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API para o Tech Challenge 2 da FIAP - SOAT
+  title: Lanchonete API - Tech Challenge 2
+  version: "1.0"
+paths:
+  /pedidos:
+    post:
+      consumes:
+      - application/json
+      description: Cria um pedido
+      parameters:
+      - description: Pedido
+        in: body
+        name: pedido
+        required: true
+        schema:
+          $ref: '#/definitions/entities.Pedido'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Cria um pedido
+      tags:
+      - pedido
+  /pedidos/{ID}:
+    get:
+      consumes:
+      - application/json
+      description: Busca um pedido
+      parameters:
+      - description: Número do pedido
+        in: path
+        name: ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.Pedido'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Busca um pedido
+      tags:
+      - pedido
+  /pedidos/{nroPedido}/pagamento/{statusPagamento}:
+    put:
+      consumes:
+      - application/json
+      description: Atualizar o status de pagamento de um pedido
+      parameters:
+      - description: Número do pedido
+        in: path
+        name: nroPedido
+        required: true
+        type: string
+      - description: Novo Status de pagamento (Pendente, Pago, Recusado, Cancelado)
+        in: path
+        name: statusPagamento
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Atualiza o status de pagamento de um pedido
+      tags:
+      - pedido
+  /pedidos/{nroPedido}/status/{status}:
+    put:
+      consumes:
+      - application/json
+      description: Atualizar um pedido
+      parameters:
+      - description: Número do pedido
+        in: path
+        name: nroPedido
+        required: true
+        type: string
+      - description: Novo Status do pedido
+        in: path
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.Pedido'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Atualiza um pedido a partir de sua Identificação
+      tags:
+      - pedido
+  /pedidos/listartodos:
+    get:
+      consumes:
+      - application/json
+      description: Lista todos os pedidos presentes no banco
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Pedido'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Lista todos os pedidos no banco
+      tags:
+      - pedido
+  /produto:
+    post:
+      consumes:
+      - application/json
+      description: Cria um produto
+      parameters:
+      - description: Produto
+        in: body
+        name: produto
+        required: true
+        schema:
+          $ref: '#/definitions/entities.Produto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Cria um produto
+      tags:
+      - produto
+  /produto/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Busca um produto
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presenters.ProdutoDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Busca um produto
+      tags:
+      - produto
+  /produto/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove um produto
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Remove um produto
+      tags:
+      - produto
+  /produto/editar:
+    put:
+      consumes:
+      - application/json
+      description: Edita um produto existente pelo ID
+      parameters:
+      - description: Produto
+        in: body
+        name: produto
+        required: true
+        schema:
+          $ref: '#/definitions/entities.Produto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Edita um produto
+      tags:
+      - produto
+  /produtos:
+    get:
+      consumes:
+      - application/json
+      description: Lista todos os produtos cadastrados
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/presenters.ProdutoDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Lista todos os produtos no banco
+      tags:
+      - produto
+  /produtos/{categoria}:
+    get:
+      consumes:
+      - application/json
+      description: Lista todos os produtos por categoria
+      parameters:
+      - description: Categoria de produtos
+        in: path
+        name: categoria
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/presenters.ProdutoDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Lista os produtos por categoria
+      tags:
+      - produto
+swagger: "2.0"

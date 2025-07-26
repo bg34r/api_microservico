@@ -1,0 +1,56 @@
+mysql_data/
+
+# Binários
+/main
+lanchonete
+*.out
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Ambiente Go
+vendor/
+*.log
+*.test
+go.work
+go.work.sum
+
+# Coverage
+coverage.txt
+cover.html
+cover.out
+*.prof
+
+# Variáveis locais
+.env
+*.env
+.env.local
+.env.*.local
+
+# Editor e IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS específicos
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Arquivos temporários
+tmp/
+temp/
+logs/
+
+# Build
+dist/
+build/
+*.swp
