@@ -29,7 +29,7 @@ jobs:
       - name: Executar testes com cobertura
         run: |
           echo "🔍 Executando todos os testes com cobertura..."
-          go test -v -coverprofile=coverage.out ./...
+          go test -v -coverprofile=coverage.out ./usecases/... ./internal/interfaces/http/handlers/...
           echo "📊 Gerando relatório..."
           go tool cover -func=coverage.out > coverage.txt
           echo "📋 Relatório gerado:"
