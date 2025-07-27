@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Fazer checkout do código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessário para SonarCloud
 
       - name: Configurar Go
         uses: actions/setup-go@v5
@@ -27,6 +29,12 @@ jobs:
         run: |
           go test -v -coverprofile=coverage.out ./usecases/... ./internal/interfaces/http/handlers/...
           go tool cover -func=coverage.out > coverage.txt
+
+      - name: Análise SonarCloud
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Verificar limite de cobertura
         id: coverage-check
@@ -81,7 +89,6 @@ jobs:
     uses: ./.github/workflows/Docker.yml
     secrets: inherit
 
-  # Job para proteger a branch main
   coverage-gate:
     needs: test-coverage
     runs-on: ubuntu-latest
