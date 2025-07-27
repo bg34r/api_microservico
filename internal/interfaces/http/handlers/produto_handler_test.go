@@ -58,8 +58,37 @@ func (m *MockProdutoListarPorCategoriaUseCase) Run(c context.Context, categoria 
 	return args.Get(0).([]*entities.Produto), args.Error(1)
 }
 
-// --- Test ---
+// --- Teste do Construtor (IMPORTANTE) ---
+func TestNewProdutoHandler(t *testing.T) {
+	// Mocks dos use cases
+	mockIncluir := new(MockProdutoIncluirUseCase)
+	mockBuscar := new(MockProdutoBuscaPorIdUseCase)
+	mockListar := new(MockProdutoListarTodosUseCase)
+	mockEditar := new(MockProdutoEditarUseCase)
+	mockRemover := new(MockProdutoRemoverUseCase)
+	mockListarCategoria := new(MockProdutoListarPorCategoriaUseCase)
 
+	// Testar construtor
+	handler := NewProdutoHandler(
+		mockIncluir,
+		mockBuscar,
+		mockListar,
+		mockEditar,
+		mockRemover,
+		mockListarCategoria,
+	)
+
+	// Verificações
+	assert.NotNil(t, handler)
+	assert.Equal(t, mockIncluir, handler.ProdutoIncluirUseCase)
+	assert.Equal(t, mockBuscar, handler.ProdutoBuscarPorIdUseCase)
+	assert.Equal(t, mockListar, handler.ProdutoListarTodosUseCase)
+	assert.Equal(t, mockEditar, handler.ProdutoEditarUseCase)
+	assert.Equal(t, mockRemover, handler.ProdutoRemoverUseCase)
+	assert.Equal(t, mockListarCategoria, handler.ProdutoListarPorCategoriaUseCase)
+}
+
+// --- Testes dos Métodos ---
 func TestProdutoHandler_ProdutoIncluir(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockUC := new(MockProdutoIncluirUseCase)
