@@ -16,7 +16,7 @@ jobs:
       - name: Fazer checkout do código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Necessário para SonarCloud
+          fetch-depth: 0
 
       - name: Configurar Go
         uses: actions/setup-go@v5
@@ -40,17 +40,19 @@ jobs:
         run: |
           echo "📊 Analisando cobertura de testes..."
           
-          # Verificar se o arquivo existe
           if [ ! -f coverage.out ]; then
             echo "❌ Arquivo coverage.out não foi encontrado!"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            echo "coverage=0" >> $GITHUB_OUTPUT
             exit 1
           fi
           
-          # Extrair cobertura
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
           
           if [ -z "$COVERAGE" ]; then
             echo "❌ Não foi possível extrair a porcentagem de cobertura!"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            echo "coverage=0" >> $GITHUB_OUTPUT
             exit 1
           fi
           
@@ -58,25 +60,25 @@ jobs:
           echo "   • Cobertura atual: ${COVERAGE}%"
           echo "   • Limite mínimo: 70%"
           
-          # Verificar se atende o limite usando awk (mais confiável que bc)
+          # Sempre definir o output de coverage
+          echo "coverage=${COVERAGE}" >> $GITHUB_OUTPUT
+          
           if awk "BEGIN {exit !($COVERAGE >= 70)}"; then
             echo ""
             echo "✅ SUCESSO: Cobertura de ${COVERAGE}% atende o limite mínimo de 70%"
             echo "🚀 Pull Request pode prosseguir!"
             echo "passed=true" >> $GITHUB_OUTPUT
-            echo "coverage=${COVERAGE}" >> $GITHUB_OUTPUT
           else
             echo ""
             echo "❌ FALHA: Cobertura de ${COVERAGE}% está abaixo do limite mínimo de 70%"
             echo "📈 Adicione mais testes para atingir o requisito"
             echo "passed=false" >> $GITHUB_OUTPUT
-            echo "coverage=${COVERAGE}" >> $GITHUB_OUTPUT
             exit 1
           fi
 
       - name: Análise SonarCloud
         uses: SonarSource/sonarcloud-github-action@master
-        if: always()  # Executar mesmo se a cobertura falhar
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -115,7 +117,7 @@ jobs:
 
   docker:
     needs: [test-coverage, build]
-    if: needs.test-coverage.outputs.coverage-passed == 'true'
+    # Remoção da condição redundante - build já depende de test-coverage
     uses: ./.github/workflows/Docker.yml
     secrets: inherit
 
@@ -130,9 +132,13 @@ jobs:
           echo "🎯 GATE DE COBERTURA - Resultado Final"
           echo "════════════════════════════════════════"
           
-          if [ "${{ needs.test-coverage.outputs.coverage-passed }}" != "true" ]; then
+          # Verificação mais robusta
+          COVERAGE_PASSED="${{ needs.test-coverage.outputs.coverage-passed }}"
+          COVERAGE_PERCENTAGE="${{ needs.test-coverage.outputs.coverage-percentage }}"
+          
+          if [ "$COVERAGE_PASSED" != "true" ]; then
             echo "❌ STATUS: REJEITADO"
-            echo "📊 Cobertura: ${{ needs.test-coverage.outputs.coverage-percentage }}% (abaixo de 70%)"
+            echo "📊 Cobertura: ${COVERAGE_PERCENTAGE}% (abaixo de 70%)"
             echo "🚫 Pull Request bloqueado por cobertura insuficiente"
             echo ""
             echo "📋 PRÓXIMOS PASSOS:"
@@ -143,7 +149,7 @@ jobs:
             exit 1
           else
             echo "✅ STATUS: APROVADO"
-            echo "📊 Cobertura: ${{ needs.test-coverage.outputs.coverage-percentage }}% (acima de 70%)"
+            echo "📊 Cobertura: ${COVERAGE_PERCENTAGE}% (acima de 70%)"
             echo "🎉 Requisitos de cobertura atendidos"
             echo "🚀 PR liberado para merge na branch main!"
           fi
