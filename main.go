@@ -10,7 +10,9 @@ import (
 
 	"lanchonete/bootstrap"
 	_ "lanchonete/docs"
+	queue "lanchonete/infra/consumer"
 	"lanchonete/internal/interfaces/http/server"
+	"lanchonete/usecases"
 )
 
 // @title Lanchonete API - Tech Challenge 2
@@ -43,6 +45,16 @@ func main() {
 			cancel()
 		}
 	}()
+
+	// Inicia consumer da fila SQS de pagamento
+	sqsConsumer, err := queue.NewSQSConsumer()
+	if err != nil {
+		log.Fatalf("Erro ao inicializar consumidor SQS: %v", err)
+	}
+
+	// Cria use-case e inicia consumo
+	pagamentoUseCase := usecases.NewPedidoAtualizarStatusPagamentoUseCase(app.PedidoRepository)
+	sqsConsumer.StartConsumingPagamento(app.Env.PagamentoQueueURL, pagamentoUseCase)
 
 	// Wait for interrupt signal to gracefully shut down the server
 	quit := make(chan os.Signal, 1)
