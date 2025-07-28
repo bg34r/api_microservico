@@ -8,13 +8,16 @@ import (
 )
 
 type Env struct {
-	ServerAddress string
-	Port          string
-	DBHost        string
-	DBPort        string
-	DBName        string
-	DBUser        string
-	DBPass        string
+	ServerAddress     string
+	Port              string
+	DBHost            string
+	DBPort            string
+	DBName            string
+	DBUser            string
+	DBPass            string
+	ProdutoQueueURL   string
+	PedidoQueueURL    string
+	PagamentoQueueURL string
 }
 
 func NewEnv() *Env {
@@ -26,12 +29,15 @@ func NewEnv() *Env {
 	viper.AutomaticEnv()
 
 	return &Env{
-		ServerAddress: viper.GetString("SERVER_ADDRESS"),
-		Port:          viper.GetString("PORT"),
-		DBHost:        viper.GetString("DB_HOST"),
-		DBPort:        viper.GetString("DB_PORT"),
-		DBName:        viper.GetString("DB_NAME"),
-		DBUser:        viper.GetString("DB_USER"),
-		DBPass:        viper.GetString("DB_PASS"),
+		ServerAddress:     viper.GetString("SERVER_ADDRESS"),
+		Port:              viper.GetString("PORT"),
+		DBHost:            viper.GetString("DB_HOST"),
+		DBPort:            viper.GetString("DB_PORT"),
+		DBName:            viper.GetString("DB_NAME"),
+		DBUser:            viper.GetString("DB_USER"),
+		DBPass:            viper.GetString("DB_PASS"),
+		ProdutoQueueURL:   viper.GetString("PRODUTO_QUEUE_URL"),
+		PedidoQueueURL:    viper.GetString("PEDIDO_QUEUE_URL"),
+		PagamentoQueueURL: viper.GetString("PAGAMENTO_QUEUE_URL"),
 	}
 }

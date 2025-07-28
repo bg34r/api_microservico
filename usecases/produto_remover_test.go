@@ -13,6 +13,13 @@ type MockProdutoRepositoryRemover struct {
 	Produtos []*entities.Produto
 }
 
+type MockEventPublisherRemover struct{}
+
+func (m *MockEventPublisherRemover) Publish(eventType string, payload interface{}) error {
+	// apenas retorna nil, simula sucesso
+	return nil
+}
+
 func (m *MockProdutoRepositoryRemover) AdicionarProduto(ctx context.Context, produto *entities.Produto) error {
 	return nil
 }
@@ -68,7 +75,9 @@ func TestProdutoRemover_Run_Sucesso(t *testing.T) {
 		Produtos: []*entities.Produto{produto},
 	}
 
-	useCase := NewProdutoRemoverUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherRemover{}
+
+	useCase := NewProdutoRemoverUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -92,7 +101,9 @@ func TestProdutoRemover_Run_ProdutoNaoEncontrado(t *testing.T) {
 		Produtos: []*entities.Produto{},
 	}
 
-	useCase := NewProdutoRemoverUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherRemover{}
+
+	useCase := NewProdutoRemoverUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -122,8 +133,9 @@ func TestProdutoRemover_Run_IdInvalido(t *testing.T) {
 	mockRepo := &MockProdutoRepositoryRemover{
 		Produtos: []*entities.Produto{produto},
 	}
+	mockPublisher := &MockEventPublisherRemover{}
 
-	useCase := NewProdutoRemoverUseCase(mockRepo)
+	useCase := NewProdutoRemoverUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -158,7 +170,9 @@ func TestProdutoRemover_Run_MultiplosProdutos(t *testing.T) {
 		Produtos: produtos,
 	}
 
-	useCase := NewProdutoRemoverUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherRemover{}
+
+	useCase := NewProdutoRemoverUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -215,7 +229,9 @@ func TestProdutoRemover_Run_RemocaoSequencial(t *testing.T) {
 		Produtos: produtos,
 	}
 
-	useCase := NewProdutoRemoverUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherRemover{}
+
+	useCase := NewProdutoRemoverUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 

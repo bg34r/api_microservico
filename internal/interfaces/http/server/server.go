@@ -12,6 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
+	sqspublisher "lanchonete/infra/publisher"
 )
 
 type Server struct {
@@ -45,11 +47,17 @@ func (s *Server) SetupRoutes() {
 
 		api := s.router.Group("")
 
+		// 1. Criar o publisher (você pode obter a URL da env, por exemplo)
+		produtoPublisher, err := sqspublisher.NewSQSPublisher(s.app.Env.ProdutoQueueURL)
+		if err != nil {
+			panic(fmt.Sprintf("Erro ao criar o publisher: %v", err))
+		}
+
 		// Produto
 		produtoRepo := s.app.ProdutoRepository
-		produtoIncluir := usecases.NewProdutoIncluirUseCase(produtoRepo)
-		produtoEditar := usecases.NewProdutoEditarUseCase(produtoRepo)
-		produtoRemover := usecases.NewProdutoRemoverUseCase(produtoRepo)
+		produtoIncluir := usecases.NewProdutoIncluirUseCase(produtoRepo, produtoPublisher)
+		produtoEditar := usecases.NewProdutoEditarUseCase(produtoRepo, produtoPublisher)
+		produtoRemover := usecases.NewProdutoRemoverUseCase(produtoRepo, produtoPublisher)
 		produtoBuscar := usecases.NewProdutoBuscaPorIdUseCase(produtoRepo)
 		produtoListarTodos := usecases.NewProdutoListarTodosUseCase(produtoRepo)
 		produtoListarPorCategoria := usecases.NewProdutoListarPorCategoriaUseCase(produtoRepo)
@@ -69,11 +77,17 @@ func (s *Server) SetupRoutes() {
 		api.PUT("/produto/editar", produtoHandler.ProdutoEditar)
 		api.DELETE("/produto/delete/:id", produtoHandler.ProdutoRemover)
 
+		// 1. Criar o publisher (você pode obter a URL da env, por exemplo)
+		pedidoPublisher, err := sqspublisher.NewSQSPublisher(s.app.Env.PedidoQueueURL)
+		if err != nil {
+			panic(fmt.Sprintf("Erro ao criar o publisher: %v", err))
+		}
+
 		// Pedido
 		pedidoRepo := s.app.PedidoRepository
-		pedidoIncluir := usecases.NewPedidoIncluirUseCase(pedidoRepo)
+		pedidoIncluir := usecases.NewPedidoIncluirUseCase(pedidoRepo, pedidoPublisher)
 		pedidoBuscar := usecases.NewPedidoBuscarPorIdUseCase(pedidoRepo)
-		pedidoAtualizar := usecases.NewPedidoAtualizarStatusUseCase(pedidoRepo)
+		pedidoAtualizar := usecases.NewPedidoAtualizarStatusUseCase(pedidoRepo, pedidoPublisher)
 		pedidoAtualizarPagamento := usecases.NewPedidoAtualizarStatusPagamentoUseCase(pedidoRepo)
 		pedidoListarTodos := usecases.NewPedidoListarTodosUseCase(pedidoRepo)
 		produtoBuscaPorId := usecases.NewProdutoBuscaPorIdUseCase(produtoRepo)

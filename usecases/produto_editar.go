@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"lanchonete/internal/domain/entities"
 	"lanchonete/internal/domain/repository"
+	"lanchonete/internal/interfaces/publisher"
 )
 
 type ProdutoEditarUseCase interface {
@@ -13,11 +14,16 @@ type ProdutoEditarUseCase interface {
 
 type produtoEditarUseCase struct {
 	produtoGateway repository.ProdutoRepository
+	eventPublisher publisher.EventPublisher
 }
 
-func NewProdutoEditarUseCase(produtoGateway repository.ProdutoRepository) ProdutoEditarUseCase {
+func NewProdutoEditarUseCase(
+	produtoGateway repository.ProdutoRepository,
+	eventPublisher publisher.EventPublisher,
+) ProdutoEditarUseCase {
 	return &produtoEditarUseCase{
 		produtoGateway: produtoGateway,
+		eventPublisher: eventPublisher,
 	}
 }
 
@@ -55,6 +61,20 @@ func (puc *produtoEditarUseCase) Run(c context.Context, id int, nome string, cat
 	err = puc.produtoGateway.EditarProduto(c, produtoEditado)
 	if err != nil {
 		return nil, fmt.Errorf("não foi possível atualizar o produto: %w", err)
+	}
+
+	// ✨ Publicar evento no SQS
+	payload := map[string]interface{}{
+		"id_produto": produtoEditado.ID,
+		"nome":       produtoEditado.Nome,
+		"categoria":  produtoEditado.Categoria,
+		"descricao":  produtoEditado.Descricao,
+		"preco":      produtoEditado.Preco,
+	}
+
+	err = puc.eventPublisher.Publish("produto_editado", payload)
+	if err != nil {
+		fmt.Println("⚠️ Falha ao publicar evento do produto editado:", err)
 	}
 
 	return produtoEditado, nil

@@ -11,6 +11,13 @@ type MockProdutoRepositoryIncluir struct {
 	Produtos []*entities.Produto
 }
 
+type MockEventPublisherProdutoIncluir struct{}
+
+func (m *MockEventPublisherProdutoIncluir) Publish(eventType string, payload interface{}) error {
+	// apenas retorna nil, simula sucesso
+	return nil
+}
+
 func (m *MockProdutoRepositoryIncluir) AdicionarProduto(ctx context.Context, produto *entities.Produto) error {
 	produto.ID = len(m.Produtos) + 1
 	m.Produtos = append(m.Produtos, produto)
@@ -54,7 +61,9 @@ func TestProdutoIncluir_Run_Sucesso(t *testing.T) {
 		Produtos: []*entities.Produto{},
 	}
 
-	useCase := NewProdutoIncluirUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherProdutoIncluir{}
+
+	useCase := NewProdutoIncluirUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -93,7 +102,9 @@ func TestProdutoIncluir_Run_DadosInvalidos(t *testing.T) {
 		Produtos: []*entities.Produto{},
 	}
 
-	useCase := NewProdutoIncluirUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherProdutoIncluir{}
+
+	useCase := NewProdutoIncluirUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -133,7 +144,9 @@ func TestProdutoIncluir_Run_MultiplosProdutos(t *testing.T) {
 		Produtos: []*entities.Produto{},
 	}
 
-	useCase := NewProdutoIncluirUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherProdutoIncluir{}
+
+	useCase := NewProdutoIncluirUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -179,7 +192,9 @@ func TestProdutoIncluir_Run_TodasCategorias(t *testing.T) {
 		Produtos: []*entities.Produto{},
 	}
 
-	useCase := NewProdutoIncluirUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherProdutoIncluir{}
+
+	useCase := NewProdutoIncluirUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 

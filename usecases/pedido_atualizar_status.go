@@ -4,6 +4,7 @@ import (
 	"context"
 	"lanchonete/internal/domain/entities"
 	"lanchonete/internal/domain/repository"
+	"lanchonete/internal/interfaces/publisher"
 )
 
 type PedidoAtualizarStatusUseCase interface {
@@ -11,12 +12,14 @@ type PedidoAtualizarStatusUseCase interface {
 }
 
 type pedidoAtualizarStatusUseCase struct {
-	pedidoGateway repository.PedidoRepository
+	pedidoGateway  repository.PedidoRepository
+	eventPublisher publisher.EventPublisher
 }
 
-func NewPedidoAtualizarStatusUseCase(pedidoGateway repository.PedidoRepository) PedidoAtualizarStatusUseCase {
+func NewPedidoAtualizarStatusUseCase(pedidoGateway repository.PedidoRepository, publisher publisher.EventPublisher) PedidoAtualizarStatusUseCase {
 	return &pedidoAtualizarStatusUseCase{
-		pedidoGateway: pedidoGateway,
+		pedidoGateway:  pedidoGateway,
+		eventPublisher: publisher,
 	}
 }
 
@@ -37,5 +40,13 @@ func (pduc *pedidoAtualizarStatusUseCase) Run(c context.Context, pedidoID int, s
 	if err != nil {
 		return err
 	}
-	return nil
+
+	// ✨ Publicar evento no SQS
+	payload := map[string]interface{}{
+		"id_pedido":     pedidoID,
+		"status":        status,
+		"atualizado_em": pedido.UltimaAtualizacao,
+	}
+
+	return pduc.eventPublisher.Publish("pedido_status_atualizado", payload)
 }
