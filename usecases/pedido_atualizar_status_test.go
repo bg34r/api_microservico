@@ -13,6 +13,13 @@ type MockPedidoRepositoryAtualizarStatus struct {
 	Pedidos []*entities.Pedido
 }
 
+type MockEventPublisherAtualizar struct{}
+
+func (m *MockEventPublisherAtualizar) Publish(eventType string, payload interface{}) error {
+	// apenas retorna nil, simula sucesso
+	return nil
+}
+
 func (m *MockPedidoRepositoryAtualizarStatus) CriarPedido(ctx context.Context, pedido *entities.Pedido) error {
 	return nil
 }
@@ -47,7 +54,8 @@ func (m *MockPedidoRepositoryAtualizarStatus) AtualizarStatusPagamento(ctx conte
 
 func TestPedidoAtualizarStatusUseCase_Run_Success(t *testing.T) {
 	mockRepo := &MockPedidoRepositoryAtualizarStatus{}
-	useCase := NewPedidoAtualizarStatusUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherAtualizar{}
+	useCase := NewPedidoAtualizarStatusUseCase(mockRepo, mockPublisher)
 
 	// Setup pedido no repositório
 	pedido := &entities.Pedido{
@@ -74,7 +82,8 @@ func TestPedidoAtualizarStatusUseCase_Run_AllValidStatuses(t *testing.T) {
 
 	for _, status := range validStatuses {
 		mockRepo := &MockPedidoRepositoryAtualizarStatus{}
-		useCase := NewPedidoAtualizarStatusUseCase(mockRepo)
+		mockPublisher := &MockEventPublisherAtualizar{}
+		useCase := NewPedidoAtualizarStatusUseCase(mockRepo, mockPublisher)
 
 		// Setup pedido no repositório
 		pedido := &entities.Pedido{
@@ -99,7 +108,8 @@ func TestPedidoAtualizarStatusUseCase_Run_AllValidStatuses(t *testing.T) {
 
 func TestPedidoAtualizarStatusUseCase_Run_InvalidStatus(t *testing.T) {
 	mockRepo := &MockPedidoRepositoryAtualizarStatus{}
-	useCase := NewPedidoAtualizarStatusUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherAtualizar{}
+	useCase := NewPedidoAtualizarStatusUseCase(mockRepo, mockPublisher)
 
 	// Setup pedido no repositório
 	pedido := &entities.Pedido{
@@ -120,7 +130,8 @@ func TestPedidoAtualizarStatusUseCase_Run_InvalidStatus(t *testing.T) {
 
 func TestPedidoAtualizarStatusUseCase_Run_PedidoNotFound(t *testing.T) {
 	mockRepo := &MockPedidoRepositoryAtualizarStatus{}
-	useCase := NewPedidoAtualizarStatusUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherAtualizar{}
+	useCase := NewPedidoAtualizarStatusUseCase(mockRepo, mockPublisher)
 
 	// Test sem pedidos no repositório
 	err := useCase.Run(context.Background(), 999, "Recebido")
@@ -133,7 +144,8 @@ func TestPedidoAtualizarStatusUseCase_Run_PedidoNotFound(t *testing.T) {
 
 func TestPedidoAtualizarStatusUseCase_Run_StatusProgression(t *testing.T) {
 	mockRepo := &MockPedidoRepositoryAtualizarStatus{}
-	useCase := NewPedidoAtualizarStatusUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherAtualizar{}
+	useCase := NewPedidoAtualizarStatusUseCase(mockRepo, mockPublisher)
 
 	// Setup pedido no repositório
 	pedido := &entities.Pedido{

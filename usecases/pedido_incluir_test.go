@@ -13,6 +13,13 @@ type MockPedidoRepositoryIncluir struct {
 	Pedidos []*entities.Pedido
 }
 
+type MockEventPublisherIncluir struct{}
+
+func (m *MockEventPublisherIncluir) Publish(eventType string, payload interface{}) error {
+	// apenas retorna nil, simula sucesso
+	return nil
+}
+
 func (m *MockPedidoRepositoryIncluir) CriarPedido(ctx context.Context, pedido *entities.Pedido) error {
 	// Simulate duplicate check
 	for _, p := range m.Pedidos {
@@ -65,7 +72,8 @@ func (m *MockPedidoRepositoryIncluir) AtualizarStatusPagamento(ctx context.Conte
 
 func TestPedidoIncluirUseCase_Run_MultiplePedidos(t *testing.T) {
 	mockRepo := &MockPedidoRepositoryIncluir{}
-	useCase := NewPedidoIncluirUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherIncluir{}
+	useCase := NewPedidoIncluirUseCase(mockRepo, mockPublisher)
 
 	// Produtos base
 	produtos := []entities.Produto{
@@ -124,7 +132,8 @@ func TestPedidoIncluirUseCase_Run_MultiplePedidos(t *testing.T) {
 
 func TestPedidoIncluirUseCase_Run_WithPersonalizacao(t *testing.T) {
 	mockRepo := &MockPedidoRepositoryIncluir{}
-	useCase := NewPedidoIncluirUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherIncluir{}
+	useCase := NewPedidoIncluirUseCase(mockRepo, mockPublisher)
 
 	produtos := []entities.Produto{
 		{Nome: "Hamburguer", Categoria: entities.Lanche, Descricao: "Hamburguer artesanal", Preco: 25.0},
@@ -146,7 +155,8 @@ func TestPedidoIncluirUseCase_Run_WithPersonalizacao(t *testing.T) {
 
 func TestPedidoIncluirUseCase_Run_EmptyProductList(t *testing.T) {
 	mockRepo := &MockPedidoRepositoryIncluir{}
-	useCase := NewPedidoIncluirUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherIncluir{}
+	useCase := NewPedidoIncluirUseCase(mockRepo, mockPublisher)
 
 	pedido, err := useCase.Run(context.Background(), "João", []entities.Produto{}, nil)
 

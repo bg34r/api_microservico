@@ -13,6 +13,13 @@ type MockProdutoRepositoryEditar struct {
 	Produtos []*entities.Produto
 }
 
+type MockEventPublisherEditar struct{}
+
+func (m *MockEventPublisherEditar) Publish(eventType string, payload interface{}) error {
+	// apenas retorna nil, simula sucesso
+	return nil
+}
+
 func (m *MockProdutoRepositoryEditar) AdicionarProduto(ctx context.Context, produto *entities.Produto) error {
 	return nil
 }
@@ -63,7 +70,9 @@ func TestProdutoEditar_Run_Sucesso(t *testing.T) {
 		Produtos: []*entities.Produto{produtoOriginal},
 	}
 
-	useCase := NewProdutoEditarUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherEditar{}
+
+	useCase := NewProdutoEditarUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -98,7 +107,9 @@ func TestProdutoEditar_Run_ProdutoNaoEncontrado(t *testing.T) {
 		Produtos: []*entities.Produto{},
 	}
 
-	useCase := NewProdutoEditarUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherEditar{}
+
+	useCase := NewProdutoEditarUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -133,7 +144,9 @@ func TestProdutoEditar_Run_CamposVazios(t *testing.T) {
 		Produtos: []*entities.Produto{produtoOriginal},
 	}
 
-	useCase := NewProdutoEditarUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherEditar{}
+
+	useCase := NewProdutoEditarUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
@@ -177,7 +190,9 @@ func TestProdutoEditar_Run_DadosInvalidos(t *testing.T) {
 		Produtos: []*entities.Produto{produtoOriginal},
 	}
 
-	useCase := NewProdutoEditarUseCase(mockRepo)
+	mockPublisher := &MockEventPublisherEditar{}
+
+	useCase := NewProdutoEditarUseCase(mockRepo, mockPublisher)
 
 	ctx := context.Background()
 
